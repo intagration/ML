@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+data = pd.read_csv('userdata.csv')
+
+X = data[['Age', 'Salary']].values
+y = data['Purchased'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+def plot_decision_boundary(X_set, y_set, title):
+    from matplotlib.colors import ListedColormap
+    X1, X2 = X_set[:, 0], X_set[:, 1]
+    X1_grid, X2_grid = np.meshgrid(
+        np.arange(start=X1.min() - 1, stop=X1.max() + 1, step=0.01),
+        np.arange(start=X2.min() - 1, stop=X2.max() + 1, step=0.01)
+    )
+    plt.contourf(
+        X1_grid, X2_grid,
+        model.predict(np.array([X1_grid.ravel(), X2_grid.ravel()]).T).reshape(X1_grid.shape),
+        alpha=0.75, cmap=ListedColormap(('red', 'green'))
+    )
+    plt.scatter(X1, X2, c=y_set, edgecolors='black', cmap=ListedColormap(('red', 'green')))
+    plt.title(title)
+    plt.xlabel('Age (scaled)')
+    plt.ylabel('Salary (scaled)')
+    plt.show()
+
+plot_decision_boundary(X_train, y_train, "Logistic Regression (Training Set)")
+plot_decision_boundary(X_test, y_test, "Logistic Regression (Test Set)")
